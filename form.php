@@ -14,26 +14,47 @@ if(isset($_POST['submit'])){
     $doctor=($_POST['doctor']);
     $eyes=($_POST['eyes']);
     $additional=($_POST['additional']);
-    $filename = $_FILES["uploadFile"]["name"];
-    $tempname = $_FILES["uploadFile"]["tmp_name"];
-    $folder = "img/".$filename;
-    move_uploaded_file($tempname,$folder);  
-    if (!preg_match ("/^[a-zA-z]*$/", $name) ) {  
-        $ErrMsg = "Only alphabets and whitespace are allowed in name.";  
+    // $filename = $_FILES["uploadFile"]["name"];
+    // $tempname = $_FILES["uploadFile"]["tmp_name"];
+    // $folder = "img/".$filename;
+    // move_uploaded_file($tempname,$folder);  
+    if ( !preg_match ("/^[a-zA-Z\s]+$/",$name)) {
+        $ErrMsg = "Name must only contain letters!";  
             echo " <script>alert('.$ErrMsg.');</script>"; 
-        
-    } else {
-        if (!preg_match('/^[a-zA-Z]+[a-zA-Z0-9._]+$/', $input)) {
+
+    }
+    else{
+        if(preg_match('/[^a-z_\-0-9]/i', $reg)) {
              $ErrMsg = "Only alphanumeric registation number is allowed.";  
             echo " <script>alert('.$ErrMsg.');</script>"; 
         
     } else {
-      
-        
-     
+        $img = $_POST['image'];
+
+    $folderPath = "upload/";
+
+  
+
+    $image_parts = explode(";base64,", $img);
+
+    $image_type_aux = explode("image/", $image_parts[0]);
+
+    $image_type = $image_type_aux[1];
+
+  
+
+    $image_base64 = base64_decode($image_parts[1]);
+
+    $fileName = uniqid() . '.png';
+
+  
+
+    $file = $folderPath . $fileName;
+
+    file_put_contents($file, $image_base64);
 
     
-    $q3= "INSERT INTO `charity` (`name`, `reg_no`, `age`, `service`, `surgery`, `venue`, `city`, `state`, `country`, `gender`, `doctor_name`, `eyes`, `notes`,`image`) VALUES ('$name', '$reg', '$age', '$service', '$surgery', '$venue', '$town', '$state', '$country', '$gender', '$doctor', '$eyes','$additional','$folder')";
+    $q3= "INSERT INTO `charity` (`name`, `reg_no`, `age`, `service`, `surgery`, `venue`, `city`, `state`, `country`, `gender`, `doctor_name`, `eyes`, `notes`,`image`) VALUES ('$name', '$reg', '$age', '$service', '$surgery', '$venue', '$town', '$state', '$country', '$gender', '$doctor', '$eyes','$additional','$file')";
     if(mysqli_query($conn, $q3)){
        echo " <script>alert('Message sent Successfully!');</script>";
 
@@ -42,7 +63,8 @@ if(isset($_POST['submit'])){
         echo " <script>alert('Message not sent ');</script>";
     }
     }
-} 
+}
+
 }
 ?>
 
@@ -55,6 +77,13 @@ if(isset($_POST['submit'])){
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CourseKosh Charity</title>
     <link rel="stylesheet" href="form.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.25/webcam.min.js"></script>
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" /> -->
+    <style type="text/css">
+        #results { padding:20px;height: 150px;
+    width: 170px; border:1px solid; background:#ccc; }
+    </style>
 </head>
 
 <body>
@@ -66,7 +95,7 @@ if(isset($_POST['submit'])){
     <!-- <div > -->
     <div class="diffSection" id="contactus_section">
         <center>
-            <p style="font-size: 50px; padding: 100px">Contact Us</p>
+            <p style="font-size: 50px; padding: 100px"> Fill the details</p>
         </center>
         <div class="csec"></div>
         <div class="back-contact">
@@ -120,9 +149,20 @@ if(isset($_POST['submit'])){
                     <label>Notes</label><br>
                     <textarea name="additional"></textarea><br>
                     
-                    <label>Upload image<span class="imp">*</span></label><br>
-                    <!-- <input type="file" accept="image/*" capture="camera" /> -->
-                    <input type="file" name="uploadFile"  style="width: 100%" required="required"/>
+                    <!-- <label>Upload image<span class="imp">*</span></label><br>
+                    <input type="file" accept="image/*" capture="camera" /> 
+                    <input type="file" name="uploadFile"  style="width: 100%" required="required"/> -->
+                    <div class="row">
+            <div class="col-md-6">
+                <div id="my_camera"></div>
+                <br/>
+                <input type=button value="Take Snapshot" onClick="take_snapshot()">
+                <input type="hidden" name="image" class="image-tag">
+            </div>
+            <div class="col-md-6 res ">
+                <div id="results" >Your captured image will appear here...</div>
+            </div>
+        </div>
                     <button type="submit" name="submit" id="csubmit">Send Message</button>
 
 </form>
@@ -131,6 +171,24 @@ if(isset($_POST['submit'])){
             </div>
         </div>
     </div>
+    <script language="JavaScript">
+    Webcam.set({
+        width: 150,
+        height: 135,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+    });
+  
+    Webcam.attach( '#my_camera' );
+  
+    function take_snapshot() {
+        Webcam.snap( function(data_uri) {
+            $(".image-tag").val(data_uri);
+            document.getElementById('results').innerHTML = '<img src="'+data_uri+'"/>';
+        } );
+    }
+</script>
+ 
 </body>
 
 </html>
